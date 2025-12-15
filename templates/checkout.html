@@ -114,13 +114,13 @@
                         <div class="fw-semibold" style="font-size: 14px;">{{ item.book.title }}</div>
                         <small class="text-muted">x{{ item.quantity }}</small>
                     </div>
-                    <span>{{ item.line_total|intcomma }} so‘m</span>
+                    <span>{{ item.line_total|floatformat:0|intcomma }} so‘m</span>
                 </div>
                 {% endfor %}
             </div>
             <div class="d-flex justify-content-between align-items-center mt-3">
                 <span class="fw-semibold">Umumiy</span>
-                <span class="fw-bold">{{ cart_total|intcomma }} so‘m</span>
+                <span class="fw-bold">{{ cart_total|floatformat:0|intcomma }} so‘m</span>
             </div>
         </div>
     </div>

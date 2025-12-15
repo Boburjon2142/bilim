@@ -30,7 +30,7 @@
                 <div class="flex-grow-1 d-flex flex-column gap-1">
                     <div class="fw-semibold" style="font-size: 15px;">{{ book.title }}</div>
                     <div class="text-muted" style="font-size: 12px;">{{ book.author.name }}</div>
-                    <div class="fw-bold mt-1">{{ book.sale_price|intcomma }} so‘m</div>
+                    <div class="fw-bold mt-1">{{ book.sale_price|floatformat:0|intcomma }} so‘m</div>
                     <div class="fav-actions d-flex flex-wrap align-items-center gap-2 mt-2">
                         <a href="{{ book.get_absolute_url }}" class="btn btn-outline-secondary btn-sm">Ko‘rish</a>
                         <form method="post" action="{% url 'add_to_cart' book.id %}">

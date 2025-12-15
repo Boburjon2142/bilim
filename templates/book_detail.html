@@ -4,8 +4,12 @@
 <div class="px-3 py-3">
     <style>
         /* Override generic .book-card img height on detail page */
-        .book-hero-img { height: auto !important; max-height: 520px; object-fit: cover; }
+        .book-hero-img { height: auto !important; max-height: 520px; object-fit: cover; border-radius: 16px; }
         @media (min-width: 992px) { .book-hero-img { max-height: 720px; } }
+        .btn-add-cart { min-width: 170px; height: 44px; font-weight: 600; }
+        @media (max-width: 576px){
+            .btn-add-cart { font-size:14px; padding:10px 12px; min-width:120px; height:40px; }
+        }
     </style>
     <div class="card book-card border-0">
         {% if book.cover_image %}
@@ -19,32 +23,32 @@
             {% if book.book_format %}<div class="mb-1 small text-muted">Format: {{ book.get_book_format_display }}</div>{% endif %}
             {% if book.pages %}<div class="mb-1 small text-muted">Sahifa: {{ book.pages }}</div>{% endif %}
             <div class="d-flex align-items-center gap-2 mt-2">
-                <div class="fw-bold fs-4 text-primary">{{ book.sale_price|intcomma }} so‘m</div>
+                <div class="fw-bold fs-4 text-primary">{{ book.sale_price|floatformat:0|intcomma }} so‘m</div>
             </div>
             {% if book.description %}
             <p class="mt-2 mb-3">{{ book.description }}</p>
             {% endif %}
-            <form method="post" action="{% url 'add_to_cart' book.id %}" class="d-flex align-items-center gap-3">
+            <form method="post" action="{% url 'add_to_cart' book.id %}" class="d-flex align-items-center gap-3 flex-wrap">
                 {% csrf_token %}
                 <div class="d-flex align-items-center gap-2">
                     <button class="qty-btn" type="button" onclick="changeQty(-1)">-</button>
                     <input type="number" id="qty" name="quantity" class="form-control text-center qty-input" value="1" min="1">
                     <button class="qty-btn" type="button" onclick="changeQty(1)">+</button>
                 </div>
-                <button class="btn btn-primary flex-grow-1" type="submit">Savatchaga qo‘shish</button>
+                <button class="btn btn-primary btn-add-cart" type="submit">Savatchaga qo‘shish</button>
             </form>
-            <div class="mt-3 d-flex gap-2">
-                {% if in_favorites %}
-                <form method="post" action="{% url 'remove_favorite' book.id %}">
+            <div class="mt-3">
+                <form
+                  class="js-fav-toggle"
+                  data-add-url="{% url 'add_favorite' book.id %}"
+                  data-remove-url="{% url 'remove_favorite' book.id %}"
+                  data-state="{% if in_favorites %}active{% else %}inactive{% endif %}"
+                >
                     {% csrf_token %}
-                    <button class="btn btn-outline-danger btn-sm" type="submit">Sevimlidan olib tashlash</button>
+                    <button class="btn btn-sm {% if in_favorites %}btn-outline-danger{% else %}btn-outline-secondary{% endif %}" type="submit">
+                        {% if in_favorites %}Sevimlidan olib tashlash{% else %}Sevimlilarga qo‘shish{% endif %}
+                    </button>
                 </form>
-                {% else %}
-                <form method="post" action="{% url 'add_favorite' book.id %}">
-                    {% csrf_token %}
-                    <button class="btn btn-outline-secondary btn-sm" type="submit">Sevimlilarga qo‘shish</button>
-                </form>
-                {% endif %}
             </div>
         </div>
     </div>
@@ -56,5 +60,49 @@ function changeQty(delta) {
     if (val < 1) val = 1;
     input.value = val;
 }
+
+document.addEventListener("DOMContentLoaded", function() {
+    // AJAXify favorites to avoid page reload
+    function getCsrf() {
+        const name = "csrftoken";
+        const cookies = document.cookie ? document.cookie.split(';') : [];
+        for (let c of cookies) {
+            const cookie = c.trim();
+            if (cookie.startsWith(name + "=")) {
+                return decodeURIComponent(cookie.substring(name.length + 1));
+            }
+        }
+        return "";
+    }
+
+    document.querySelectorAll(".js-fav-toggle").forEach(form => {
+        form.addEventListener("submit", function(e) {
+            e.preventDefault();
+            const isActive = form.dataset.state === "active";
+            const url = isActive ? form.dataset.removeUrl : form.dataset.addUrl;
+            const btn = form.querySelector("button");
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRFToken": getCsrf(),
+                },
+                body: new FormData(form),
+            }).then(() => {
+                if (isActive) {
+                    form.dataset.state = "inactive";
+                    btn.classList.remove("btn-outline-danger");
+                    btn.classList.add("btn-outline-secondary");
+                    btn.textContent = "Sevimlilarga qo‘shish";
+                } else {
+                    form.dataset.state = "active";
+                    btn.classList.remove("btn-outline-secondary");
+                    btn.classList.add("btn-outline-danger");
+                    btn.textContent = "Sevimlidan olib tashlash";
+                }
+            }).catch(() => form.submit());
+        });
+    });
+});
 </script>
 {% endblock %}
