@@ -2,31 +2,46 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Q, F
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
-from django.views.decorators.cache import cache_page
 from django.core.cache import cache
+from django.conf import settings
+from django.utils.translation import get_language
 from .models import Category, Book, Author, Banner, FeaturedCategory
 
+
+from .cache_keys import (
+    home_top_categories_key,
+    home_featured_authors_key,
+    home_banners_key,
+    home_featured_cfgs_key,
+    home_featured_books_key,
+    home_best_selling_key,
+    home_new_books_key,
+    home_recommended_key,
+    best_selling_list_key,
+    recommended_list_key,
+    categories_top_key,
+)
 
 HOME_TTL = 60 * 12  # 12 minutes; homepage rotates moderately often
 LIST_TTL = 60 * 30  # 30 minutes; bestseller/recommended lists are stable
 CATEGORY_TTL = 60 * 60  # 1 hour; taxonomy changes rarely
 
 
-@cache_page(HOME_TTL)
 def home(request):
+    lang = get_language() or getattr(settings, "LANGUAGE_CODE", "default")
     # Cache only public, non-user-specific content to reduce DB hits.
     categories = cache.get_or_set(
-        "home:top_categories",
+        home_top_categories_key(lang),
         lambda: list(Category.objects.filter(parent__isnull=True)[:4]),
         HOME_TTL,
     )
     authors = cache.get_or_set(
-        "home:featured_authors",
+        home_featured_authors_key(lang),
         lambda: list(Author.objects.filter(is_featured=True)[:10]),
         HOME_TTL,
     )
     banners = cache.get_or_set(
-        "home:active_banners",
+        home_banners_key(lang),
         lambda: list(
             Banner.objects.filter(is_active=True)
             .order_by("order", "-created_at")
@@ -35,7 +50,7 @@ def home(request):
         HOME_TTL,
     )
     featured_cfgs = cache.get_or_set(
-        "home:featured_cfgs",
+        home_featured_cfgs_key(lang),
         lambda: list(
             FeaturedCategory.objects.filter(is_active=True)
             .select_related("category")
@@ -45,7 +60,7 @@ def home(request):
     featured_sections = []
     for cfg in featured_cfgs:
         limit = cfg.limit or 10
-        books_key = f"home:featured_books:{cfg.category_id}:{limit}"
+        books_key = home_featured_books_key(cfg.category_id, limit, lang)
         books = cache.get_or_set(
             books_key,
             lambda: list(
@@ -63,7 +78,7 @@ def home(request):
             }
         )
     best_selling = cache.get_or_set(
-        "home:best_selling_top6",
+        home_best_selling_key(lang),
         lambda: list(
             Book.objects.select_related("author", "category")
             .order_by("-views")[:6]
@@ -71,7 +86,7 @@ def home(request):
         LIST_TTL,
     )
     new_books = cache.get_or_set(
-        "home:new_books_top6",
+        home_new_books_key(lang),
         lambda: list(
             Book.objects.select_related("author", "category")
             .order_by("-created_at")[:6]
@@ -79,7 +94,7 @@ def home(request):
         HOME_TTL,
     )
     recommended = cache.get_or_set(
-        "home:recommended_top6",
+        home_recommended_key(lang),
         lambda: list(
             Book.objects.filter(is_recommended=True)
             .select_related("author", "category")
@@ -102,10 +117,10 @@ def home(request):
     )
 
 
-@cache_page(CATEGORY_TTL)
 def categories_list(request):
+    lang = get_language() or getattr(settings, "LANGUAGE_CODE", "default")
     categories = cache.get_or_set(
-        "categories:list:top",
+        categories_top_key(lang),
         lambda: list(Category.objects.filter(parent__isnull=True).order_by("name")),
         CATEGORY_TTL,
     )
@@ -133,22 +148,22 @@ def new_books_list(request):
     return render(request, "book_list.html", {"title": "Yangi qo‘shilganlar", "books": books})
 
 
-@cache_page(LIST_TTL)
 def best_selling_list(request):
+    lang = get_language() or getattr(settings, "LANGUAGE_CODE", "default")
     # Safe to cache: same for every user, changes only when sales/views change.
     books = cache.get_or_set(
-        "books:best_selling:list",
+        best_selling_list_key(lang),
         lambda: list(Book.objects.select_related("author", "category").order_by("-views")),
         LIST_TTL,
     )
     return render(request, "book_list.html", {"title": "Eng ko‘p sotilganlar", "books": books})
 
 
-@cache_page(LIST_TTL)
 def recommended_list(request):
+    lang = get_language() or getattr(settings, "LANGUAGE_CODE", "default")
     # Safe to cache: recommendation flag is content-based, not user-based.
     books = cache.get_or_set(
-        "books:recommended:list",
+        recommended_list_key(lang),
         lambda: list(
             Book.objects.filter(is_recommended=True)
             .select_related("author", "category")

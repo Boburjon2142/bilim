@@ -10,33 +10,44 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     {% block extra_css %}{% endblock %}
     <style>
-      body { background: #f8f9fb; font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; overflow-x:hidden; }
-      .topbar { padding:12px 16px; background:#fff; border-bottom:1px solid #eee; position:sticky; top:0; z-index:1000; }
-      .brand { font-size:26px; font-weight:800; letter-spacing:-0.5px; }
-      .icon-btn { width:40px; height:40px; border-radius:12px; border:1px solid #eee; display:grid; place-items:center; background:#fff; color:#111; position:relative; transition:transform .08s ease; }
-      .icon-btn:hover { transform:translateY(-1px); }
+      body { background: #EEF3F8; font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; overflow-x:hidden; }
+      main { background: linear-gradient(180deg, #EEF3F8 0%, #F7F9FC 100%); }
+      .topbar { padding:12px 16px; background:#1E2A38; border-bottom:0; position:sticky; top:0; z-index:1000; box-shadow:0 6px 18px rgba(0,0,0,0.14); }
+      .brand { font-size:26px; font-weight:800; letter-spacing:-0.5px; color:#fff; }
+      .icon-btn { width:40px; height:40px; border-radius:12px; border:1px solid #2B3B4D; display:grid; place-items:center; background:#243447; color:rgba(255,255,255,0.85); position:relative; transition:transform .08s ease, color .12s ease, background .12s ease, border-color .12s ease; }
+      .icon-btn:hover { transform:translateY(-1px); color:#F2C94C; border-color:#F2C94C; }
+      .icon-btn.active { color:#F2C94C; border-color:#F2C94C; background:#1E2A38; }
       .page-shell { width:100%; max-width:1200px; margin:0 auto; padding:16px 12px 64px; }
       .hero-img { width:100%; height:340px; object-fit:cover; border-radius:20px; }
       .section-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
       .section-title { font-size:18px; font-weight:700; margin-bottom:0; }
       .section-link { font-weight:600; color:#000; text-decoration:none; display:flex; align-items:center; gap:4px; }
-      .pill-cat { display:inline-flex; align-items:center; justify-content:center; padding:12px 18px; border-radius:14px; color:#fff; font-weight:600; min-width:180px; box-shadow:0 8px 20px rgba(0,0,0,0.08); scroll-snap-align:start; }
+      .pill-cat { display:inline-flex; align-items:center; justify-content:center; padding:12px 18px; border-radius:18px; color:#fff; font-weight:600; min-width:180px; box-shadow:0 6px 14px rgba(0,0,0,0.12); scroll-snap-align:start; transition:transform .1s ease, box-shadow .1s ease; }
+      .pill-cat:hover { transform:translateY(-2px); box-shadow:0 10px 20px rgba(0,0,0,0.14); }
       .author-chip { width:90px; flex:0 0 auto; text-align:center; scroll-snap-align:center; }
-      .author-chip img { width:70px; height:70px; object-fit:cover; border-radius:50%; box-shadow:0 4px 14px rgba(0,0,0,0.12); }
+      .author-chip img { width:70px; height:70px; object-fit:cover; border-radius:50%; box-shadow:0 8px 18px rgba(0,0,0,0.15); border:2px solid #fff; }
       .author-chip .name { display:block; margin-top:6px; font-weight:600; font-size:12px; color:#111; }
+      .authors-card { background:#fff; border-radius:20px; padding:14px; box-shadow:0 12px 28px rgba(30,42,56,0.08); margin-bottom:18px; }
+      .categories-card { background:#fff; border-radius:20px; padding:14px; box-shadow:0 12px 28px rgba(30,42,56,0.08); margin-bottom:18px; }
       .strip { display:flex; gap:12px; overflow-x:auto; padding:4px 2px 10px; scroll-snap-type:x mandatory; scrollbar-width:none; position:relative; }
       .strip::-webkit-scrollbar { display:none; }
+      .categories-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:14px; overflow:visible; scroll-snap-type:none; padding:4px 0 10px; }
+      .categories-grid .pill-cat { min-width:0; width:100%; }
       .book-strip-card { flex:0 0 200px; border-radius:16px; overflow:hidden; background:#fff; box-shadow:0 10px 30px rgba(0,0,0,0.08); scroll-snap-align:start; position:relative; }
       .book-strip-card img { width:100%; height:170px; object-fit:cover; }
       .book-strip-card .meta { padding:10px 12px 12px; }
       .book-strip-card .meta .title { font-weight:700; font-size:14px; margin:0 0 4px; color:#0f172a; }
       .book-strip-card .meta .author { font-size:12px; color:#6b7280; margin:0; }
-      .hero-card { border-radius:22px; overflow:hidden; box-shadow:0 14px 40px rgba(0,0,0,0.12); background:#fff; }
+      .hero-card { border-radius:24px; overflow:hidden; box-shadow:0 12px 30px rgba(11,60,110,0.35); background: linear-gradient(135deg, #0B3C6E, #06284D); padding:6px; }
+      .hero-card .hero-img { border-radius:16px; }
+      .hero-divider { height:12px; background: linear-gradient(180deg, rgba(30,42,56,0.12), rgba(30,42,56,0)); border-radius:0 0 16px 16px; margin-bottom:10px; }
       footer { background:#000; color:#fff; padding:18px 0; margin-top:32px; }
       footer .text-muted { color:#d1d5db !important; }
-      .bottom-nav { position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid #e5e7eb; display:grid; grid-template-columns:repeat(5,1fr); padding:8px 4px 10px; z-index:9999; }
-      .bottom-link { display:flex; flex-direction:column; align-items:center; gap:2px; color:#111; text-decoration:none; font-size:11px; }
-      .bottom-link i { font-size:18px; }
+      .bottom-nav { position:fixed; bottom:0; left:0; right:0; background:rgba(30,42,56,0.92); border-top:0; display:grid; grid-template-columns:repeat(5,1fr); padding:10px 6px 14px; z-index:9999; box-shadow:0 -8px 24px rgba(0,0,0,0.25); border-radius:18px 18px 0 0; backdrop-filter:blur(12px); }
+      .bottom-link { display:flex; flex-direction:column; align-items:center; gap:2px; color:rgba(255,255,255,0.75); text-decoration:none; font-size:11px; transition:color .15s ease, transform .12s ease; }
+      .bottom-link i { font-size:18px; color:inherit; transition:transform .12s ease; }
+      .bottom-link.active { color:#F2C94C; transform:translateY(-2px); }
+      .bottom-link.active i { color:#F2C94C; transform:translateY(-2px); }
       @media (max-width: 768px){ .page-shell{padding-top:12px; padding-bottom:96px;} .hero-img{height:240px;} .book-strip-card{flex-basis:55vw; max-width:220px;} .pill-cat{min-width:160px;} footer{display:none;} }
       @media (max-width: 576px){
         .hero-img{height:200px;}
@@ -52,12 +63,12 @@
 <body>
   {% cache 900 navbar %}
   <header class="topbar d-flex align-items-center justify-content-between">
-    <a href="{% url 'home' %}" class="text-dark text-decoration-none">
+    <a href="{% url 'home' %}" class="text-decoration-none">
       <span class="brand">BILIM UZ</span>
     </a>
     <div class="d-flex align-items-center gap-2 top-actions">
       <a href="{% url 'home' %}" class="icon-btn d-none d-md-grid" title="Bosh sahifa"><i class="bi bi-house"></i></a>
-      <a href="{% url 'about' %}" class="icon-btn d-none d-md-grid" title="Biz haqimizda"><i class="bi bi-info-circle"></i></a>
+      <a href="{% url 'about' %}" class="icon-btn d-none d-md-grid" title="Maqsad"><i class="bi bi-info-circle"></i></a>
       <a href="{% url 'favorites' %}" class="icon-btn position-relative d-none d-md-grid" title="Sevimlilar"><i class="bi bi-heart"></i></a>
       <a href="{% url 'cart_detail' %}" class="icon-btn position-relative d-none d-md-grid" title="Savat"><i class="bi bi-cart3"></i></a>
       <a href="{% url 'search' %}" class="icon-btn" title="Qidiruv"><i class="bi bi-search"></i></a>
@@ -79,28 +90,30 @@
   </footer>
   {% endcache %}
 
+  {% with request.resolver_match.url_name as current_url %}
   <nav class="bottom-nav d-md-none">
-    <a href="{% url 'home' %}" class="bottom-link">
+    <a href="{% url 'home' %}" class="bottom-link {% if current_url == 'home' %}active{% endif %}">
       <i class="bi bi-house"></i>
       <span>Asosiy</span>
     </a>
-    <a href="{% url 'about' %}" class="bottom-link">
+    <a href="{% url 'about' %}" class="bottom-link {% if current_url == 'about' %}active{% endif %}">
       <i class="bi bi-info-circle"></i>
-      <span>Biz haqimizda</span>
+      <span>Maqsad</span>
     </a>
-    <a href="{% url 'favorites' %}" class="bottom-link">
+    <a href="{% url 'favorites' %}" class="bottom-link {% if current_url == 'favorites' %}active{% endif %}">
       <i class="bi bi-heart"></i>
       <span>Sevimlilar</span>
     </a>
-    <a href="{% url 'cart_detail' %}" class="bottom-link">
+    <a href="{% url 'cart_detail' %}" class="bottom-link {% if current_url == 'cart_detail' %}active{% endif %}">
       <i class="bi bi-cart3"></i>
       <span>Savat</span>
     </a>
-    <a href="{% url 'search' %}" class="bottom-link">
+    <a href="{% url 'search' %}" class="bottom-link {% if current_url == 'search' %}active{% endif %}">
       <i class="bi bi-search"></i>
       <span>Qidiruv</span>
     </a>
   </nav>
+  {% endwith %}
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   {% block extra_js %}{% endblock %}

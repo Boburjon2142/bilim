@@ -34,43 +34,52 @@
             </div>
         </div>
     </div>
+    <div class="hero-divider"></div>
 
     <div class="section-head">
         <h5 class="section-title mb-0">Kategoriya</h5>
         <a class="section-link" href="{% url 'categories_list' %}">Hammasi <i class="bi bi-chevron-right"></i></a>
     </div>
     {% cache 3600 home_categories_grid %}
-    <div class="strip fade-edges mb-4 categories-grid">
-        {% for category in categories|slice:":4" %}
-            {% cycle "linear-gradient(135deg,#f59e0b,#f97316)" "linear-gradient(135deg,#3b82f6,#2563eb)" "linear-gradient(135deg,#ec4899,#f43f5e)" "linear-gradient(135deg,#0ea5e9,#0ea5e9)" as grad silent %}
-            <a href="{% url 'category_detail' category.slug %}" class="text-decoration-none">
-                <div class="pill-cat" style="background: {{ grad }};">{{ category.name }}</div>
-            </a>
-        {% empty %}
-        <p class="mb-0 ps-1">Kategoriyalar hali qo‘shilmagan.</p>
-        {% endfor %}
+    <div class="categories-card">
+        <div class="section-head">
+            <h5 class="section-title mb-0">Kategoriya</h5>
+            <a class="section-link" href="{% url 'categories_list' %}">Hammasi <i class="bi bi-chevron-right"></i></a>
+        </div>
+        <div class="strip fade-edges mb-1 categories-grid">
+            {% for category in categories|slice:":4" %}
+                {% cycle "#f8b04e" "#4d8aff" "#f57ba3" "#45bdf5" as cat_color silent %}
+                <a href="{% url 'category_detail' category.slug %}" class="text-decoration-none">
+                    <div class="pill-cat" style="background: {{ cat_color }};">{{ category.name }}</div>
+                </a>
+            {% empty %}
+            <p class="mb-0 ps-1">Kategoriyalar hali qo‘shilmagan.</p>
+            {% endfor %}
+        </div>
     </div>
     {% endcache %}
 
     {% if authors %}
     {% cache 3600 home_featured_authors %}
-    <div class="section-head">
-        <h5 class="section-title mb-0">Mualliflar</h5>
-        <a class="section-link" href="{% url 'authors_list' %}">Hammasi <i class="bi bi-chevron-right"></i></a>
-    </div>
-    <div class="strip fade-edges mb-4">
-        {% for author in authors %}
-        <a class="author-chip text-decoration-none" href="{% url 'author_detail' author.id %}">
-            {% if author.photo %}
-            <img src="{{ author.photo.url }}" alt="{{ author.name }}">
-            {% else %}
-            <div class="rounded-circle d-flex align-items-center justify-content-center bg-light mx-auto" style="width:70px;height:70px;font-weight:700;color:#111;">
-                {{ author.name|slice:":2" }}
-            </div>
-            {% endif %}
-            <span class="name">{{ author.name }}</span>
-        </a>
-        {% endfor %}
+    <div class="authors-card">
+        <div class="section-head">
+            <h5 class="section-title mb-0">Mualliflar</h5>
+            <a class="section-link" href="{% url 'authors_list' %}">Hammasi <i class="bi bi-chevron-right"></i></a>
+        </div>
+        <div class="strip fade-edges mb-0">
+            {% for author in authors %}
+            <a class="author-chip text-decoration-none" href="{% url 'author_detail' author.id %}">
+                {% if author.photo %}
+                <img src="{{ author.photo.url }}" alt="{{ author.name }}">
+                {% else %}
+                <div class="rounded-circle d-flex align-items-center justify-content-center bg-light mx-auto" style="width:70px;height:70px;font-weight:700;color:#111;">
+                    {{ author.name|slice:":2" }}
+                </div>
+                {% endif %}
+                <span class="name">{{ author.name }}</span>
+            </a>
+            {% endfor %}
+        </div>
     </div>
     {% endcache %}
     {% endif %}
