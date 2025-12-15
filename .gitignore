@@ -2,6 +2,7 @@
 venv/
 .env
 .venv/
+.python-version
 
 # Python caches
 __pycache__/
@@ -18,11 +19,27 @@ db.sqlite3
 staticfiles/
 media/
 
+# Python packaging / build
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Test / coverage
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
 # IDE / OS junk
 .DS_Store
 Thumbs.db
 .idea/
 .vscode/
+.fleet/
+*.swp
+*.swo
 
 # Env files
 *.env

@@ -7,7 +7,30 @@ load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "change-me")
 DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() == "true"
-ALLOWED_HOSTS = [h for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",") if h]
+ALLOWED_HOSTS = [
+    h
+    for h in os.environ.get(
+        "DJANGO_ALLOWED_HOSTS",
+        "127.0.0.1,localhost,sinov.pythonanywhere.com,bilimstore.uz,www.bilimstore.uz",
+    ).split(",")
+    if h
+]
+
+# Caching: LocMem for local/dev; Redis-ready snippet commented for prod
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "unique-bilim-cache",
+        "TIMEOUT": None,  # rely on per-use timeouts
+    },
+    # "default": {  # Redis example for production
+    #     "BACKEND": "django.core.cache.backends.redis.RedisCache",
+    #     "LOCATION": os.environ.get("REDIS_URL", "redis://127.0.0.1:6379/1"),
+    #     "OPTIONS": {
+    #         "client_class": "django_redis.client.DefaultClient",
+    #     },
+    # }
+}
 
 INSTALLED_APPS = [
     "django.contrib.admin",

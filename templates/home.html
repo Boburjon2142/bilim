@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load humanize %}
+{% load humanize cache %}
 {% block content %}
 <div class="px-1 px-md-2 py-3">
     <div class="hero-card mb-4">
@@ -39,8 +39,9 @@
         <h5 class="section-title mb-0">Kategoriya</h5>
         <a class="section-link" href="{% url 'categories_list' %}">Hammasi <i class="bi bi-chevron-right"></i></a>
     </div>
-    <div class="strip fade-edges mb-4">
-        {% for category in categories %}
+    {% cache 3600 home_categories_grid %}
+    <div class="strip fade-edges mb-4 categories-grid">
+        {% for category in categories|slice:":4" %}
             {% cycle "linear-gradient(135deg,#f59e0b,#f97316)" "linear-gradient(135deg,#3b82f6,#2563eb)" "linear-gradient(135deg,#ec4899,#f43f5e)" "linear-gradient(135deg,#0ea5e9,#0ea5e9)" as grad silent %}
             <a href="{% url 'category_detail' category.slug %}" class="text-decoration-none">
                 <div class="pill-cat" style="background: {{ grad }};">{{ category.name }}</div>
@@ -49,8 +50,10 @@
         <p class="mb-0 ps-1">Kategoriyalar hali qo‘shilmagan.</p>
         {% endfor %}
     </div>
+    {% endcache %}
 
     {% if authors %}
+    {% cache 3600 home_featured_authors %}
     <div class="section-head">
         <h5 class="section-title mb-0">Mualliflar</h5>
         <a class="section-link" href="{% url 'authors_list' %}">Hammasi <i class="bi bi-chevron-right"></i></a>
@@ -69,6 +72,7 @@
         </a>
         {% endfor %}
     </div>
+    {% endcache %}
     {% endif %}
 
     {% if featured_sections %}

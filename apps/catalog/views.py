@@ -2,22 +2,58 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Q, F
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.cache import cache_page
+from django.core.cache import cache
 from .models import Category, Book, Author, Banner, FeaturedCategory
 
 
+HOME_TTL = 60 * 12  # 12 minutes; homepage rotates moderately often
+LIST_TTL = 60 * 30  # 30 minutes; bestseller/recommended lists are stable
+CATEGORY_TTL = 60 * 60  # 1 hour; taxonomy changes rarely
+
+
+@cache_page(HOME_TTL)
 def home(request):
-    categories = Category.objects.filter(parent__isnull=True)
-    top_categories = categories[:4]
-    authors = Author.objects.filter(is_featured=True)[:10]
-    banners = Banner.objects.filter(is_active=True).order_by("order", "-created_at")[:5]
-    featured_cfgs = FeaturedCategory.objects.filter(is_active=True).select_related("category")
+    # Cache only public, non-user-specific content to reduce DB hits.
+    categories = cache.get_or_set(
+        "home:top_categories",
+        lambda: list(Category.objects.filter(parent__isnull=True)[:4]),
+        HOME_TTL,
+    )
+    authors = cache.get_or_set(
+        "home:featured_authors",
+        lambda: list(Author.objects.filter(is_featured=True)[:10]),
+        HOME_TTL,
+    )
+    banners = cache.get_or_set(
+        "home:active_banners",
+        lambda: list(
+            Banner.objects.filter(is_active=True)
+            .order_by("order", "-created_at")
+            .select_related(None)[:5]
+        ),
+        HOME_TTL,
+    )
+    featured_cfgs = cache.get_or_set(
+        "home:featured_cfgs",
+        lambda: list(
+            FeaturedCategory.objects.filter(is_active=True)
+            .select_related("category")
+        ),
+        HOME_TTL,
+    )
     featured_sections = []
     for cfg in featured_cfgs:
         limit = cfg.limit or 10
-        books = (
-            Book.objects.filter(category=cfg.category)
-            .select_related("author", "category")
-            .order_by("-created_at")[:limit]
+        books_key = f"home:featured_books:{cfg.category_id}:{limit}"
+        books = cache.get_or_set(
+            books_key,
+            lambda: list(
+                Book.objects.filter(category=cfg.category)
+                .select_related("author", "category")
+                .order_by("-created_at")[:limit]
+            ),
+            HOME_TTL,
         )
         featured_sections.append(
             {
@@ -26,18 +62,36 @@ def home(request):
                 "books": books,
             }
         )
-    best_selling = Book.objects.select_related("author", "category").order_by("-views")[:6]
-    new_books = Book.objects.select_related("author", "category").order_by("-created_at")[:6]
-    recommended = (
-        Book.objects.filter(is_recommended=True)
-        .select_related("author", "category")
-        .order_by("-created_at")[:6]
+    best_selling = cache.get_or_set(
+        "home:best_selling_top6",
+        lambda: list(
+            Book.objects.select_related("author", "category")
+            .order_by("-views")[:6]
+        ),
+        LIST_TTL,
+    )
+    new_books = cache.get_or_set(
+        "home:new_books_top6",
+        lambda: list(
+            Book.objects.select_related("author", "category")
+            .order_by("-created_at")[:6]
+        ),
+        HOME_TTL,
+    )
+    recommended = cache.get_or_set(
+        "home:recommended_top6",
+        lambda: list(
+            Book.objects.filter(is_recommended=True)
+            .select_related("author", "category")
+            .order_by("-created_at")[:6]
+        ),
+        LIST_TTL,
     )
     return render(
         request,
         "home.html",
         {
-            "categories": top_categories,
+            "categories": categories,
             "authors": authors,
             "banners": banners,
             "featured_sections": featured_sections,
@@ -48,8 +102,13 @@ def home(request):
     )
 
 
+@cache_page(CATEGORY_TTL)
 def categories_list(request):
-    categories = Category.objects.filter(parent__isnull=True).order_by("name")
+    categories = cache.get_or_set(
+        "categories:list:top",
+        lambda: list(Category.objects.filter(parent__isnull=True).order_by("name")),
+        CATEGORY_TTL,
+    )
     return render(request, "categories_list.html", {"categories": categories})
 
 
@@ -74,13 +133,29 @@ def new_books_list(request):
     return render(request, "book_list.html", {"title": "Yangi qo‘shilganlar", "books": books})
 
 
+@cache_page(LIST_TTL)
 def best_selling_list(request):
-    books = Book.objects.order_by("-views")
+    # Safe to cache: same for every user, changes only when sales/views change.
+    books = cache.get_or_set(
+        "books:best_selling:list",
+        lambda: list(Book.objects.select_related("author", "category").order_by("-views")),
+        LIST_TTL,
+    )
     return render(request, "book_list.html", {"title": "Eng ko‘p sotilganlar", "books": books})
 
 
+@cache_page(LIST_TTL)
 def recommended_list(request):
-    books = Book.objects.filter(is_recommended=True).order_by("-created_at")
+    # Safe to cache: recommendation flag is content-based, not user-based.
+    books = cache.get_or_set(
+        "books:recommended:list",
+        lambda: list(
+            Book.objects.filter(is_recommended=True)
+            .select_related("author", "category")
+            .order_by("-created_at")
+        ),
+        LIST_TTL,
+    )
     return render(request, "book_list.html", {"title": "Tavsiya etilganlar", "books": books})
 
 
@@ -93,13 +168,12 @@ def author_detail(request, author_id):
 def category_detail(request, slug):
     category = get_object_or_404(Category, slug=slug)
     descendants = category.children.all()
+    category_ids = [category.id] + list(descendants.values_list("id", flat=True))
     books = (
-        Book.objects.filter(category__in=[category] + list(descendants))
+        Book.objects.filter(category__in=category_ids)
         .select_related("author", "category")
     )
-    authors = Author.objects.filter(books__category=category).distinct()
-    if descendants.exists():
-        authors = Author.objects.filter(books__category__in=[category] + list(descendants)).distinct()
+    authors = Author.objects.filter(books__category__in=category_ids).distinct()
 
     author_id = request.GET.get("author")
     if author_id:
