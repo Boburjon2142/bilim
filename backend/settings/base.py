@@ -33,10 +33,10 @@ if DEBUG:
 elif _redis_url:
     CACHES = {
         "default": {
-            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "BACKEND": "django_redis.cache.RedisCache",
             "LOCATION": _redis_url,
             "OPTIONS": {
-                "client_class": "django_redis.client.DefaultClient",
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
             },
             "TIMEOUT": None,  # rely on per-use timeouts
         }
