@@ -44,13 +44,13 @@ bookstore/
 1. **Repositoryni yuklash**: repo'ni zip/tar yoki git clone orqali PythonAnywhere ichiga joylang.
 2. **Virtualenv**: `python -m venv venv && source venv/bin/activate` (Windows yo‘q, bash ichida).
 3. **Kutubxonalar**: `pip install -r requirements.txt`.
-4. **Env**: `.env` yaratib qo‘ying (DEBUG=False, production key). Minimal:
+4. **Env**: `.env` ni `.env.example` dan ko‘chirib to‘ldiring (DEBUG=False, production key). Minimal:
    ```
    DJANGO_SECRET_KEY=prod-secret
    DJANGO_DEBUG=False
    DJANGO_ALLOWED_HOSTS=<username>.pythonanywhere.com
    DJANGO_CSRF_TRUSTED_ORIGINS=https://<username>.pythonanywhere.com
-   DJANGO_SECURE_SSL_REDIRECT=False
+   DJANGO_SECURE_SSL_REDIRECT=False  # HTTPS yo‘q bo‘lsa False qiling
    DJANGO_SESSION_COOKIE_SECURE=False
    DJANGO_CSRF_COOKIE_SECURE=False
    ```

@@ -1,10 +1,16 @@
 from .base import *
 
+
+def env_bool(key: str, default: str = "False") -> bool:
+    return os.environ.get(key, default).strip().lower() == "true"
+
+
 DEBUG = False
 
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+# Allow toggling security flags for non-HTTPS staging while keeping True as default.
+SECURE_SSL_REDIRECT = env_bool("DJANGO_SECURE_SSL_REDIRECT", "True")
+SESSION_COOKIE_SECURE = env_bool("DJANGO_SESSION_COOKIE_SECURE", "True")
+CSRF_COOKIE_SECURE = env_bool("DJANGO_CSRF_COOKIE_SECURE", "True")
 
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
