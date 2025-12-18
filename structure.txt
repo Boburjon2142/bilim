@@ -1,63 +1,112 @@
+# Project: bookstore (Django 5)
+
+## Quick analysis
+- Framework: Django (DJANGO_SETTINGS_MODULE = config.settings)
+- Local env: .env / .env.example (python-dotenv)
+- Apps: apps/catalog (catalog), apps/orders (cart/orders/delivery)
+- Storage: db.sqlite3 (SQLite for dev)
+- Static/media: static/ (assets), media/ (uploads)
+- Deploy artifacts present: passenger_wsgi.py, .htaccess, media.conf, tmp/restart.txt, deploy.zip
+- Notes: README.md describes a backend/ layout, but current code uses config/ as the Django project module.
+
+## Tree (filtered: excludes venv/, __pycache__/)
 bookstore/
-├─ manage.py
-├─ requirements.txt
-├─ .env
-├─ .gitignore
-├─ README.md
-├─ passenger_wsgi.py
-├─ media.conf
-├─ db.sqlite3
-├─ apps/
-│  ├─ catalog/
-│  │  ├─ admin.py
-│  │  ├─ apps.py
-│  │  ├─ context_processors.py
-│  │  ├─ models.py
-│  │  ├─ urls.py
-│  │  ├─ views.py
-│  │  └─ migrations/…
-│  └─ orders/
-│     ├─ admin.py
-│     ├─ apps.py
-│     ├─ cart.py
-│     ├─ context_processors.py
-│     ├─ forms.py
-│     ├─ models.py
-│     ├─ services/
-│     │  └─ delivery.py
-│     ├─ signals.py
-│     ├─ urls.py
-│     ├─ views.py
-│     └─ migrations/…
-├─ backend/
-│  ├─ backend/
-│  │  ├─ __init__.py
-│  │  ├─ urls.py
-│  │  ├─ wsgi.py
-│  │  └─ asgi.py
-│  └─ settings/
-│     ├─ __init__.py
-│     ├─ base.py
-│     ├─ dev.py
-│     └─ settings.py
-├─ templates/
-│  ├─ base.html
-│  ├─ home.html
-│  ├─ checkout.html
-│  ├─ order_confirmation.html
-│  ├─ cart.html
-│  ├─ favorites.html
-│  ├─ search_results.html
-│  ├─ about.html
-│  ├─ book_detail.html
-│  ├─ book_list.html
-│  ├─ authors_list.html
-│  ├─ categories_list.html
-│  └─ category_list.html
-├─ static/
-│  └─ orders/
-│     └─ admin_shop_origin.js
-├─ media/
-│  └─ (uploaded files)
-├─ tmp/
-└─ venv/ (ignored)
+  manage.py
+  requirements.txt
+  README.md
+  .env
+  .env.example
+  .gitignore
+  .htaccess
+  media.conf
+  passenger_wsgi.py
+  db.sqlite3
+  django.log
+  deploy.zip
+  config/
+    __init__.py
+    asgi.py
+    settings.py
+    urls.py
+    wsgi.py
+  apps/
+    catalog/
+      __init__.py
+      admin.py
+      apps.py
+      cache_keys.py
+      context_processors.py
+      models.py
+      signals.py
+      urls.py
+      views.py
+      migrations/
+        0001_initial.py
+        0002_banner.py
+        0002_category_parent.py
+        0003_featuredcategory.py
+        0003_merge_0002_banner_0002_category_parent.py
+        0004_author_is_featured.py
+        0004_merge_20251203_0914.py
+        0005_author_photo.py
+        0006_aboutpage.py
+        0006_merge_0004_merge_20251203_0914_0005_author_photo.py
+        0007_alter_author_options_alter_book_options_and_more.py
+        0008_merge_20251204_1149.py
+    orders/
+      __init__.py
+      admin.py
+      apps.py
+      cart.py
+      context_processors.py
+      forms.py
+      models.py
+      signals.py
+      urls.py
+      views.py
+      services/
+        __init__.py
+        delivery.py
+      tests/
+      migrations/
+        0001_initial.py
+        0002_order_location.py
+        0003_delivery_fields_and_zone.py
+        0004_order_maps_link.py
+        0005_deliverynotice.py
+        0006_deliverysettings.py
+        0007_shop_origin.py
+        0008_deliverysettings_shop_location_link.py
+  templates/
+    base.html
+    home.html
+    about.html
+    book_list.html
+    book_detail.html
+    authors_list.html
+    categories_list.html
+    category_list.html
+    search_results.html
+    cart.html
+    favorites.html
+    checkout.html
+    order_confirmation.html
+    admin/
+      base_site.html
+      catalog/book/
+        change_list.html
+        change_list_root.html
+        search_form.html
+  static/
+    .gitkeep
+    favicon.png
+    orders/
+      admin_shop_origin.js
+  media/
+    .gitkeep
+    authors/
+    banners/
+    covers/
+  tmp/
+    restart.txt
+  venv/  (local virtual environment)
