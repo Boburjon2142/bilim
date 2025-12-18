@@ -12,3 +12,22 @@ Alias /media /home/bilimsto/bookstore/media/
 <Directory /home/bilimsto/bookstore/media/>
     Require all granted
 </Directory>
+
+# --- Browser caching (static/media) ---
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault "access plus 7 days"
+
+  ExpiresByType image/jpg "access plus 30 days"
+  ExpiresByType image/jpeg "access plus 30 days"
+  ExpiresByType image/png "access plus 30 days"
+  ExpiresByType image/webp "access plus 30 days"
+
+  ExpiresByType text/css "access plus 7 days"
+  ExpiresByType application/javascript "access plus 7 days"
+</IfModule>
+
+# --- GZIP compression (HTML/CSS/JS) ---
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css application/javascript
+</IfModule>

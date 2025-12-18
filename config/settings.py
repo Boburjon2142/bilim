@@ -1,4 +1,5 @@
 import os
+import socket
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -117,15 +118,31 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 # --- Cache ---
+def _env_bool(name: str, default: bool = False) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _redis_reachable(redis_url: str) -> bool:
+    """Fast check to avoid crashing locally when Redis isn't running."""
+    try:
+        parsed = urlparse(redis_url)
+        host = parsed.hostname or "127.0.0.1"
+        port = parsed.port or 6379
+        with socket.create_connection((host, port), timeout=0.25):
+            return True
+    except OSError:
+        return False
+
+
 _redis_url = os.getenv("REDIS_URL") or os.getenv("DJANGO_REDIS_URL")
-if DEBUG:
-    CACHES = {
-        "default": {
-            "BACKEND": "django.core.cache.backends.dummy.DummyCache",
-            "TIMEOUT": None,
-        }
-    }
-elif _redis_url:
+# Local dev convenience: if you run Redis locally and didn't set REDIS_URL, auto-use it.
+if not _redis_url and DEBUG and _env_bool("REDIS_AUTO_LOCAL", default=True):
+    _redis_url = "redis://127.0.0.1:6379/0"
+
+if _redis_url and _redis_reachable(_redis_url):
     CACHES = {
         "default": {
             "BACKEND": "django_redis.cache.RedisCache",
@@ -138,8 +155,7 @@ else:
     CACHES = {
         "default": {
             "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-            "LOCATION": "bilimstore-locmem",
-            "TIMEOUT": None,
+            "LOCATION": "bilim-cache",
         }
     }
 

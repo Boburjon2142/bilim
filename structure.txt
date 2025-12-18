@@ -2,12 +2,12 @@
 
 ## Quick analysis
 - Framework: Django (DJANGO_SETTINGS_MODULE = config.settings)
-- Local env: .env / .env.example (python-dotenv)
-- Apps: apps/catalog (catalog), apps/orders (cart/orders/delivery)
-- Storage: db.sqlite3 (SQLite for dev)
+- Local env: .env (python-dotenv)
+- Apps: apps/catalog (catalog), apps/orders (cart/orders/delivery/checkout)
+- Orders -> Telegram: buyurtma yaratilganda botga xabar yuboradi (signals + Bot API)
+- Storage: db.sqlite3 (SQLite for dev) yoki DATABASE_URL (Postgres)
 - Static/media: static/ (assets), media/ (uploads)
-- Deploy artifacts present: passenger_wsgi.py, .htaccess, media.conf, tmp/restart.txt, deploy.zip
-- Notes: README.md describes a backend/ layout, but current code uses config/ as the Django project module.
+- Deploy artifacts present: passenger_wsgi.py, .htaccess, media.conf, tmp/restart.txt
 
 ## Tree (filtered: excludes venv/, __pycache__/)
 bookstore/
@@ -15,14 +15,12 @@ bookstore/
   requirements.txt
   README.md
   .env
-  .env.example
   .gitignore
   .htaccess
   media.conf
   passenger_wsgi.py
   db.sqlite3
   django.log
-  deploy.zip
   config/
     __init__.py
     asgi.py
@@ -60,6 +58,11 @@ bookstore/
       cart.py
       context_processors.py
       forms.py
+      management/
+        __init__.py
+        commands/
+          __init__.py
+          telegram_test.py
       models.py
       signals.py
       urls.py
@@ -67,6 +70,7 @@ bookstore/
       services/
         __init__.py
         delivery.py
+        telegram.py
       tests/
       migrations/
         0001_initial.py
@@ -109,4 +113,4 @@ bookstore/
     covers/
   tmp/
     restart.txt
-  venv/  (local virtual environment)
+  venv/  (local virtual environment, excluded)
