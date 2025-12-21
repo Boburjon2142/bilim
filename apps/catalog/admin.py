@@ -22,6 +22,8 @@ class BookAdminForm(forms.ModelForm):
             "author_name",
             "purchase_price",
             "sale_price",
+            "barcode",
+            "stock_quantity",
             "description",
             "cover_image",
             "book_format",
@@ -62,9 +64,19 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
-    list_display = ("title", "category", "author", "purchase_price", "sale_price", "is_recommended", "views", "created_at")
+    list_display = (
+        "title",
+        "category",
+        "author",
+        "purchase_price",
+        "sale_price",
+        "stock_quantity",
+        "is_recommended",
+        "views",
+        "created_at",
+    )
     list_filter = ("category", "author", "is_recommended", "book_format")
-    search_fields = ("title", "author__name")
+    search_fields = ("title", "author__name", "barcode")
     prepopulated_fields = {"slug": ("title",)}
     autocomplete_fields = ("category",)
     form = BookAdminForm

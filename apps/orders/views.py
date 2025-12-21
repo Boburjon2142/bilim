@@ -8,6 +8,7 @@ from django.views.decorators.http import require_POST
 from django.db import transaction
 
 from apps.catalog.models import Book
+from apps.crm.models import Customer
 from .cart import Cart
 from .forms import CheckoutForm
 from .models import DeliveryNotice, DeliverySettings, Order, OrderItem
@@ -59,7 +60,20 @@ def checkout(request):
         if form.is_valid():
             with transaction.atomic():
                 order = form.save(commit=False)
-                order.total_price = cart.total_price()
+                subtotal = cart.total_price()
+                order.subtotal_before_discount = subtotal
+                discount_percent = 0
+                customer = None
+                phone = (order.phone or "").strip()
+                if phone:
+                    customer = Customer.objects.filter(phone=phone).first()
+                    if customer:
+                        discount_percent = min(int(customer.discount_percent or 0), 100)
+                        order.customer = customer
+                discount_amount = (subtotal * Decimal(discount_percent)) / Decimal("100") if discount_percent else 0
+                order.discount_percent = discount_percent
+                order.discount_amount = discount_amount
+                order.total_price = subtotal - discount_amount
                 order = recalculate_delivery(order, save=False)
                 order.save()
                 for item in cart_items:

@@ -69,7 +69,7 @@
                 <div class="p-2">
                     <div class="fw-semibold" style="font-size: 14px; line-height: 1.2;">{{ book.title }}</div>
                     <div class="text-muted" style="font-size: 12px;">{{ book.author.name }}</div>
-                    <div class="fw-bold text-primary mt-1">{{ book.sale_price|intcomma }} so‘m</div>
+                    <div class="fw-bold text-primary mt-1">{{ book.sale_price|floatformat:0|intcomma }} so‘m</div>
                     <a href="{{ book.get_absolute_url }}" class="stretched-link"></a>
                 </div>
             </div>

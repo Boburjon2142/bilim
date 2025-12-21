@@ -76,6 +76,8 @@ class Book(models.Model):
     cover_image = models.ImageField("Muqova", upload_to="covers/", blank=True, null=True)
     book_format = models.CharField("Format", max_length=10, choices=FORMAT_CHOICES, blank=True)
     pages = models.PositiveIntegerField("Betlar soni", blank=True, null=True)
+    barcode = models.CharField("Shtrix-kod", max_length=64, blank=True, unique=True, null=True)
+    stock_quantity = models.IntegerField("Ombor", default=0)
     is_recommended = models.BooleanField("Tavsiya etilgan", default=False)
     views = models.PositiveIntegerField("Ko‘rishlar soni", default=0)
     created_at = models.DateTimeField("Yaratilgan", auto_now_add=True)

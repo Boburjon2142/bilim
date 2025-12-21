@@ -1,0 +1,58 @@
+{% extends "crm/base.html" %}
+
+{% block title %}Kuryerlar{% endblock %}
+
+{% block content %}
+<h4 class="mb-3">Kuryerlar</h4>
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card crm-card p-3">
+      <table class="table crm-table align-middle">
+        <thead>
+          <tr>
+            <th>F.I.Sh</th>
+            <th>Telefon</th>
+            <th>Telegram</th>
+            <th>Faol</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for courier in couriers %}
+          <tr>
+            <td>{{ courier.name }}</td>
+            <td>{{ courier.phone|default:"—" }}</td>
+            <td>{{ courier.telegram_username|default:"—" }}</td>
+            <td>{% if courier.is_active %}Ha{% else %}Yo'q{% endif %}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="text-muted">Kuryerlar yo'q</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card crm-card p-3">
+      <div class="fw-semibold mb-2">Samaradorlik</div>
+      <table class="table crm-table align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Kuryer</th>
+            <th class="text-end">Buyurtmalar</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for courier in courier_stats %}
+          <tr>
+            <td>{{ courier.courier__name }}</td>
+            <td class="text-end">{{ courier.total }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="2" class="text-muted">Ma'lumot yo'q</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

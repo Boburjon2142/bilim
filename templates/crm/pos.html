@@ -1,0 +1,143 @@
+{% extends "crm/base.html" %}
+{% load humanize %}
+
+{% block title %}POS{% endblock %}
+
+{% block content %}
+<h4 class="mb-3">POS — Do‘kon kassasi</h4>
+
+<div class="card crm-card p-3 mb-4">
+  <form method="post" class="row g-2 align-items-end" id="pos-add-form">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="add">
+    <div class="col-lg-4 col-md-4">
+      <label class="form-label">Shtrix-kod</label>
+      <input type="text" name="barcode" class="form-control" id="barcode-input" placeholder="Scan qiling yoki kiriting">
+    </div>
+    <div class="col-lg-4 col-md-4">
+      <label class="form-label">Kitob (ixtiyoriy)</label>
+      <select name="book_id" class="form-select">
+        <option value="">Tanlash</option>
+        {% for book in books %}
+        <option value="{{ book.id }}">{{ book.title }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-lg-2 col-md-2">
+      <label class="form-label">Soni</label>
+      <div class="input-group flex-nowrap">
+        <button class="btn btn-outline-secondary" type="button" id="qty-minus">-</button>
+        <input type="text" name="quantity" class="form-control text-center" value="1" id="qty-input" inputmode="numeric">
+        <button class="btn btn-outline-secondary" type="button" id="qty-plus">+</button>
+      </div>
+    </div>
+    <div class="col-lg-1 col-md-1 d-flex align-items-end">
+      <button class="btn btn-outline-primary w-100 text-nowrap" type="submit">Qo‘shish</button>
+    </div>
+    <div class="col-lg-1 col-md-1 d-flex align-items-end">
+      <button class="btn btn-outline-danger w-100 text-nowrap" type="submit" name="action" value="clear">Tozalash</button>
+    </div>
+  </form>
+</div>
+
+<div class="card crm-card p-3 mb-4">
+  <h6 class="fw-semibold">Savat</h6>
+  <table class="table crm-table align-middle">
+    <thead>
+      <tr>
+        <th>Kitob</th>
+        <th class="text-end">Soni</th>
+        <th class="text-end">Narx</th>
+        <th class="text-end">Jami</th>
+        <th class="text-end">O'chirish</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in cart_items %}
+      <tr>
+        <td>{{ item.book.title }}</td>
+        <td class="text-end">{{ item.quantity }}</td>
+        <td class="text-end">{{ item.price|floatformat:0|intcomma }}</td>
+        <td class="text-end">{{ item.line_total|floatformat:0|intcomma }}</td>
+        <td class="text-end">
+          <form method="post" class="d-inline">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="remove">
+            <input type="hidden" name="book_id" value="{{ item.book.id }}">
+            <button class="btn btn-sm btn-outline-danger" type="submit">O'chirish</button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="text-muted">Savat bo'sh</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div class="text-end fw-semibold">Jami: {{ cart_total|floatformat:0|intcomma }} so'm</div>
+</div>
+
+<div class="card crm-card p-3">
+  <form method="post" class="row g-2 align-items-end">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="checkout">
+    <div class="col-md-4">
+      <label class="form-label">Mijoz ismi</label>
+      <input type="text" name="full_name" class="form-control" placeholder="POS mijoz">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Telefon</label>
+      <input type="text" name="phone" class="form-control" placeholder="+998 90 123 45 67">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">To‘lov turi</label>
+      <select name="payment_type" class="form-select">
+        <option value="cash">Naqd</option>
+        <option value="bank">Karta</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <button class="btn btn-success w-100" type="submit">To'lov</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function() {
+    const input = document.getElementById("barcode-input");
+    const form = document.getElementById("pos-add-form");
+    const qtyInput = document.getElementById("qty-input");
+    const minusBtn = document.getElementById("qty-minus");
+    const plusBtn = document.getElementById("qty-plus");
+    if (!input || !form) return;
+    input.addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        form.submit();
+      }
+    });
+
+    function clampQty(value) {
+      const parsed = parseInt(value, 10);
+      if (Number.isNaN(parsed) || parsed < 1) return 1;
+      return parsed;
+    }
+
+    if (qtyInput && minusBtn && plusBtn) {
+      minusBtn.addEventListener("click", function() {
+        qtyInput.value = clampQty(qtyInput.value) - 1;
+        if (parseInt(qtyInput.value, 10) < 1) {
+          qtyInput.value = 1;
+        }
+      });
+      plusBtn.addEventListener("click", function() {
+        qtyInput.value = clampQty(qtyInput.value) + 1;
+      });
+      qtyInput.addEventListener("blur", function() {
+        qtyInput.value = clampQty(qtyInput.value);
+      });
+    }
+  })();
+</script>
+{% endblock %}

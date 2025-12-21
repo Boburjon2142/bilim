@@ -29,10 +29,12 @@ class OrderAdmin(admin.ModelAdmin):
         "delivery_distance_km",
         "delivery_zone_status",
         "maps_link_display",
+        "order_source",
+        "courier",
         "status",
         "created_at",
     )
-    list_filter = ("status", "payment_type", "created_at", "delivery_zone_status")
+    list_filter = ("status", "payment_type", "order_source", "created_at", "delivery_zone_status")
     inlines = [OrderItemInline]
     search_fields = ("full_name", "phone", "location", "address_text")
     readonly_fields = (

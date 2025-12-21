@@ -9,13 +9,20 @@ class Order(models.Model):
     ]
     STATUS_CHOICES = [
         ("new", "Yangi"),
-        ("accepted", "Qabul qilindi"),
+        ("paid", "To‘langan"),
+        ("assigned", "Kuryerga biriktirilgan"),
         ("delivering", "Yetkazilmoqda"),
-        ("finished", "Yakunlangan"),
+        ("closed", "Yopilgan"),
+        ("canceled", "Bekor qilingan"),
     ]
     ZONE_STATUS_CHOICES = [
         ("OK", "OK"),
         ("BLOCKED", "BLOCKED"),
+    ]
+
+    SOURCE_CHOICES = [
+        ("online", "Online"),
+        ("pos", "Do‘kon (POS)"),
     ]
 
     full_name = models.CharField("F.I.Sh", max_length=255)
@@ -27,6 +34,18 @@ class Order(models.Model):
     note = models.TextField("Izoh", blank=True)
     payment_type = models.CharField("To‘lov turi", max_length=20, choices=PAYMENT_CHOICES, default="cash")
     status = models.CharField("Holat", max_length=20, choices=STATUS_CHOICES, default="new")
+    order_source = models.CharField("Kanal", max_length=20, choices=SOURCE_CHOICES, default="online")
+    customer = models.ForeignKey(
+        "crm.Customer", on_delete=models.SET_NULL, null=True, blank=True, related_name="orders"
+    )
+    courier = models.ForeignKey(
+        "crm.Courier", on_delete=models.SET_NULL, null=True, blank=True, related_name="orders"
+    )
+    subtotal_before_discount = models.DecimalField(
+        "Chegirmasiz summa", max_digits=10, decimal_places=2, default=0
+    )
+    discount_percent = models.PositiveIntegerField("Chegirma (%)", default=0)
+    discount_amount = models.DecimalField("Chegirma summasi", max_digits=10, decimal_places=2, default=0)
     total_price = models.DecimalField("Umumiy summa", max_digits=10, decimal_places=2, default=0)
     latitude = models.DecimalField("Kenglik (lat)", max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField("Uzunlik (lng)", max_digits=9, decimal_places=6, null=True, blank=True)
@@ -38,6 +57,10 @@ class Order(models.Model):
     )
     courier_maps_url = models.URLField("Kuryer xarita havolasi", blank=True, default="")
     delivery_pricing_snapshot = models.JSONField("Yetkazib berish hisoboti", default=dict, blank=True)
+    paid_at = models.DateTimeField("To‘langan vaqti", null=True, blank=True)
+    assigned_at = models.DateTimeField("Biriktirilgan vaqti", null=True, blank=True)
+    delivered_at = models.DateTimeField("Yetkazildi vaqti", null=True, blank=True)
+    canceled_at = models.DateTimeField("Bekor qilingan vaqti", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

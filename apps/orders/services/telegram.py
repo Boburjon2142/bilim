@@ -136,7 +136,7 @@ def send_order_created(order_id: int) -> None:
     lines.append("")
 
     lines.append(label("To‘lov", e(order.get_payment_type_display())))
-    lines.append(label("Jami", e(f"{order.total_price:.2f}")))
+    lines.append(label("Jami", _format_money_uzs(order.total_price)))
     lines.append(
         label(
             "Yetkazish",

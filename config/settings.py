@@ -32,8 +32,12 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.humanize",
+    "rest_framework",
+    "drf_spectacular",
     "apps.catalog.apps.CatalogConfig",
     "apps.orders.apps.OrdersConfig",
+    "apps.crm.apps.CrmConfig",
+    "apps.api.apps.ApiConfig",
 ]
 
 MIDDLEWARE = [
@@ -193,6 +197,16 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CART_SESSION_ID = "cart"
 FILE_UPLOAD_HANDLERS = ["django.core.files.uploadhandler.TemporaryFileUploadHandler"]
 FILE_UPLOAD_MAX_MEMORY_SIZE = 0
+
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "BILIM UZ API",
+    "DESCRIPTION": "Bilimstore/CRM API hujjatlari",
+    "VERSION": "1.0.0",
+}
 
 SHOP_LAT = float(os.getenv("SHOP_LAT", "41.2995"))
 SHOP_LNG = float(os.getenv("SHOP_LNG", "69.2401"))
