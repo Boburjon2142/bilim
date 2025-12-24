@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Courier, Customer, InventoryLog
+from .models import Courier, Customer, InventoryLog, Expense
 
 
 @admin.register(Customer)
@@ -31,3 +31,10 @@ class InventoryLogAdmin(admin.ModelAdmin):
     list_display = ("book", "delta", "reason", "related_order", "created_at")
     list_filter = ("reason",)
     search_fields = ("book__title", "note")
+
+
+@admin.register(Expense)
+class ExpenseAdmin(admin.ModelAdmin):
+    list_display = ("title", "amount", "spent_on", "created_at")
+    list_filter = ("spent_on",)
+    search_fields = ("title", "note")

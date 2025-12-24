@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.db.models import Q, F
+from django.db.models import Q, F, Sum
+from django.db.models.functions import Coalesce
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.core.cache import cache
@@ -244,6 +245,10 @@ def search(request):
     books = Book.objects.none()
     authors = Author.objects.none()
     categories = Category.objects.all()
+    top_categories = (
+        Category.objects.annotate(total_views=Coalesce(Sum("books__views"), 0))
+        .order_by("-total_views", "name")[:3]
+    )
 
     sort_options = [
         ("", "Mosligi bo‘yicha"),
@@ -306,6 +311,7 @@ def search(request):
             "books": books,
             "authors": authors,
             "categories": categories,
+            "top_categories": top_categories,
             "current_author": author_id,
             "current_category": category_slug,
             "current_sort": sort,

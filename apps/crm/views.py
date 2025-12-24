@@ -6,7 +6,8 @@ from django.db.models import Count, Sum, F, DecimalField, ExpressionWrapper
 from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, date, time, datetime
+import calendar
 
 
 def _is_operator(user) -> bool:
@@ -27,7 +28,7 @@ def _operator_block(request):
 from apps.catalog.models import Book
 from apps.orders.cart import Cart
 from apps.orders.models import Order, OrderItem
-from .models import Courier, Customer, InventoryLog
+from .models import Courier, Customer, InventoryLog, Expense
 from .utils.pdf import build_pdf
 
 
@@ -76,6 +77,7 @@ def dashboard(request):
         .order_by("-total")[:8]
     )
     weekly_revenue = []
+    weekly_expenses = []
     max_total = Decimal("0")
     for offset in range(6, -1, -1):
         day = today - timedelta(days=offset)
@@ -85,14 +87,48 @@ def dashboard(request):
             .get("total")
             or Decimal("0")
         )
+        expense_total = (
+            Expense.objects.filter(spent_on=day)
+            .aggregate(total=Sum("amount"))
+            .get("total")
+            or Decimal("0")
+        )
         if total > max_total:
             max_total = total
+        if expense_total > max_total:
+            max_total = expense_total
         weekly_revenue.append({"label": day.strftime("%d.%m"), "total": total})
+        weekly_expenses.append({"label": day.strftime("%d.%m"), "total": expense_total})
     for item in weekly_revenue:
         if max_total:
             item["percent"] = float((item["total"] / max_total) * Decimal("100"))
         else:
             item["percent"] = 0
+    for item in weekly_expenses:
+        if max_total:
+            item["percent"] = float((item["total"] / max_total) * Decimal("100"))
+        else:
+            item["percent"] = 0
+
+    weekly_data = []
+    bar_max = 70
+    bar_min = 4
+    def _height(total: Decimal) -> int:
+        if max_total <= 0:
+            return bar_min
+        ratio = float(total / max_total)
+        return int(round(bar_min + (bar_max - bar_min) * ratio))
+    for idx, item in enumerate(weekly_revenue):
+        expense_item = weekly_expenses[idx] if idx < len(weekly_expenses) else {"percent": 0}
+        weekly_data.append(
+            {
+                "label": item["label"],
+                "income": item["total"],
+                "income_height": _height(item["total"]),
+                "expense": expense_item.get("total", Decimal("0")),
+                "expense_height": _height(expense_item.get("total", Decimal("0"))),
+            }
+        )
 
     context = {
         "orders_today": orders_today.count(),
@@ -102,7 +138,7 @@ def dashboard(request):
         "top_books": top_books,
         "top_customers": top_customers,
         "courier_stats": courier_stats,
-        "weekly_revenue": weekly_revenue,
+        "weekly_data": weekly_data,
     }
     return render(request, "crm/dashboard.html", context)
 
@@ -231,6 +267,207 @@ def export_report_pdf(request):
     pdf_bytes = build_pdf(lines)
     response = HttpResponse(pdf_bytes, content_type="application/pdf")
     response["Content-Disposition"] = 'attachment; filename="bilimuz_report.pdf"'
+    return response
+
+
+@staff_member_required
+def monthly_report(request):
+    operator_response = _operator_block(request)
+    if operator_response:
+        return operator_response
+    today = timezone.localdate()
+    month_start = today.replace(day=1)
+    start_raw = (request.GET.get("start") or "").strip()
+    end_raw = (request.GET.get("end") or "").strip()
+    start_time_raw = (request.GET.get("start_time") or "").strip()
+    end_time_raw = (request.GET.get("end_time") or "").strip()
+    start_date = month_start
+    end_date = today
+    start_time = time(0, 0)
+    end_time = time(23, 59)
+    if start_raw:
+        try:
+            start_date = date.fromisoformat(start_raw)
+        except ValueError:
+            start_date = month_start
+    if end_raw:
+        try:
+            end_date = date.fromisoformat(end_raw)
+        except ValueError:
+            end_date = today
+    if start_time_raw:
+        try:
+            start_time = time.fromisoformat(start_time_raw)
+        except ValueError:
+            start_time = time(0, 0)
+    if end_time_raw:
+        try:
+            end_time = time.fromisoformat(end_time_raw)
+        except ValueError:
+            end_time = time(23, 59)
+    if start_date > end_date:
+        start_date, end_date = end_date, start_date
+
+    start_dt = datetime.combine(start_date, start_time)
+    end_dt = datetime.combine(end_date, end_time)
+    if start_dt > end_dt:
+        start_dt, end_dt = end_dt, start_dt
+    tz = timezone.get_current_timezone()
+    start_dt = timezone.make_aware(start_dt, tz)
+    end_dt = timezone.make_aware(end_dt, tz)
+
+    if request.method == "POST":
+        title = (request.POST.get("title") or "").strip()
+        amount_raw = (request.POST.get("amount") or "").strip()
+        spent_on_raw = (request.POST.get("spent_on") or "").strip()
+        note = (request.POST.get("note") or "").strip()
+        if title and amount_raw:
+            try:
+                amount = Decimal(amount_raw)
+            except (TypeError, ValueError):
+                amount = None
+            if amount is not None:
+                spent_on = today
+                if spent_on_raw:
+                    try:
+                        spent_on = date.fromisoformat(spent_on_raw)
+                    except ValueError:
+                        spent_on = today
+                Expense.objects.create(
+                    title=title,
+                    amount=amount,
+                    spent_on=spent_on,
+                    note=note,
+                )
+                return redirect("crm_report")
+
+    income_total = (
+        Order.objects.filter(created_at__gte=start_dt, created_at__lte=end_dt)
+        .aggregate(total=Sum("total_price"))
+        .get("total")
+        or Decimal("0")
+    )
+    expense_total = (
+        Expense.objects.filter(spent_on__gte=start_date, spent_on__lte=end_date)
+        .aggregate(total=Sum("amount"))
+        .get("total")
+        or Decimal("0")
+    )
+    net_total = income_total - expense_total
+
+    expenses = Expense.objects.filter(spent_on__gte=start_date, spent_on__lte=end_date)[:200]
+
+    base_month = start_date
+    last_day = calendar.monthrange(base_month.year, base_month.month)[1]
+    range_start = date(base_month.year, base_month.month, 1)
+    range_mid = date(base_month.year, base_month.month, 11)
+    range_mid2 = date(base_month.year, base_month.month, 21)
+    range_end = date(base_month.year, base_month.month, last_day)
+    quick_ranges = [
+        {"label": "1—10", "start": range_start, "end": date(base_month.year, base_month.month, 10)},
+        {"label": "11—20", "start": range_mid, "end": date(base_month.year, base_month.month, 20)},
+        {"label": f"21—{last_day}", "start": range_mid2, "end": range_end},
+    ]
+    for item in quick_ranges:
+        item["is_active"] = start_date == item["start"] and end_date == item["end"]
+
+    return render(
+        request,
+        "crm/report.html",
+        {
+            "month_start": start_date,
+            "month_end": end_date,
+            "income_total": income_total,
+            "expense_total": expense_total,
+            "net_total": net_total,
+            "expenses": expenses,
+            "start_date": start_date,
+            "end_date": end_date,
+            "start_time": start_time.strftime("%H:%M"),
+            "end_time": end_time.strftime("%H:%M"),
+            "quick_ranges": quick_ranges,
+        },
+    )
+
+
+@staff_member_required
+def export_monthly_report_pdf(request):
+    operator_response = _operator_block(request)
+    if operator_response:
+        return operator_response
+    today = timezone.localdate()
+    month_start = today.replace(day=1)
+    start_raw = (request.GET.get("start") or "").strip()
+    end_raw = (request.GET.get("end") or "").strip()
+    start_time_raw = (request.GET.get("start_time") or "").strip()
+    end_time_raw = (request.GET.get("end_time") or "").strip()
+    start_date = month_start
+    end_date = today
+    start_time = time(0, 0)
+    end_time = time(23, 59)
+    if start_raw:
+        try:
+            start_date = date.fromisoformat(start_raw)
+        except ValueError:
+            start_date = month_start
+    if end_raw:
+        try:
+            end_date = date.fromisoformat(end_raw)
+        except ValueError:
+            end_date = today
+    if start_time_raw:
+        try:
+            start_time = time.fromisoformat(start_time_raw)
+        except ValueError:
+            start_time = time(0, 0)
+    if end_time_raw:
+        try:
+            end_time = time.fromisoformat(end_time_raw)
+        except ValueError:
+            end_time = time(23, 59)
+    if start_date > end_date:
+        start_date, end_date = end_date, start_date
+
+    start_dt = datetime.combine(start_date, start_time)
+    end_dt = datetime.combine(end_date, end_time)
+    if start_dt > end_dt:
+        start_dt, end_dt = end_dt, start_dt
+    tz = timezone.get_current_timezone()
+    start_dt = timezone.make_aware(start_dt, tz)
+    end_dt = timezone.make_aware(end_dt, tz)
+
+    income_total = (
+        Order.objects.filter(created_at__gte=start_dt, created_at__lte=end_dt)
+        .aggregate(total=Sum("total_price"))
+        .get("total")
+        or Decimal("0")
+    )
+    expense_total = (
+        Expense.objects.filter(spent_on__gte=start_date, spent_on__lte=end_date)
+        .aggregate(total=Sum("amount"))
+        .get("total")
+        or Decimal("0")
+    )
+    net_total = income_total - expense_total
+
+    lines = [
+        "BILIM UZ - Oylik hisobot",
+        f"Davr: {start_date:%Y-%m-%d} {start_time:%H:%M} - {end_date:%Y-%m-%d} {end_time:%H:%M}",
+        "",
+        f"Kirim (sotuv): {_format_money(income_total)}",
+        f"Chiqim: {_format_money(expense_total)}",
+        f"Qoldiq: {_format_money(net_total)}",
+        "",
+        "Chiqimlar ro'yxati:",
+        "Sana | Sarlavha | Summa",
+        "-" * 60,
+    ]
+    for expense in Expense.objects.filter(spent_on__gte=start_date, spent_on__lte=end_date).order_by("-spent_on"):
+        lines.append(f"{expense.spent_on:%Y-%m-%d} | {expense.title} | {_format_money(expense.amount)}")
+
+    pdf_bytes = build_pdf(lines)
+    response = HttpResponse(pdf_bytes, content_type="application/pdf")
+    response["Content-Disposition"] = 'attachment; filename="bilimuz_monthly_report.pdf"'
     return response
 
 

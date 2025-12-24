@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 
 class Customer(models.Model):
@@ -70,3 +71,19 @@ class InventoryLog(models.Model):
 
     def __str__(self):
         return f"{self.book} ({self.delta})"
+
+
+class Expense(models.Model):
+    title = models.CharField("Sarlavha", max_length=255)
+    amount = models.DecimalField("Chiqim", max_digits=12, decimal_places=2)
+    spent_on = models.DateField("Sana", default=timezone.localdate)
+    note = models.TextField("Izoh", blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-spent_on", "-created_at"]
+        verbose_name = "Chiqim"
+        verbose_name_plural = "Chiqimlar"
+
+    def __str__(self):
+        return f"{self.title} ({self.amount})"
