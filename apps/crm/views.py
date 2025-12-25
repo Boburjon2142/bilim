@@ -416,6 +416,7 @@ def monthly_report(request):
             "net_total": net_total,
             "expenses": expenses,
             "debts": debts,
+            "today": today,
             "start_date": start_date,
             "end_date": end_date,
             "start_time": start_time.strftime("%H:%M"),
@@ -617,8 +618,23 @@ def inventory_list(request):
             InventoryLog.objects.create(book=book, delta=delta, reason="adjust", note=note)
         return redirect("crm_inventory")
 
-    books = Book.objects.all().order_by("title")[:200]
-    return render(request, "crm/inventory.html", {"books": books})
+    query = (request.GET.get("q") or "").strip()
+    all_books = Book.objects.all().order_by("title")
+    books = all_books
+    if query:
+        books = all_books.filter(title__icontains=query) | all_books.filter(barcode__icontains=query)
+        books = books.order_by("title")
+
+    return render(
+        request,
+        "crm/inventory.html",
+        {
+            "books": list(books[:200]),
+            "all_books": list(all_books[:200]),
+            "query": query,
+            "total_books": all_books.count(),
+        },
+    )
 
 
 @staff_member_required

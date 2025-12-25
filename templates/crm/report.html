@@ -5,23 +5,23 @@
 
 {% block extra_css %}
 <style>
-  .report-page { max-width:1100px; margin:0 auto; }
-  .report-header h4 { font-size:34px; font-weight:800; color:#1f2937; }
-  .report-header .range { font-size:16px; color:#6b7280; }
-  .report-card { border-radius:18px; border:1px solid #e6e6e6; box-shadow:0 12px 22px rgba(16,42,67,0.08); background:#f7f7f9; }
-  .report-kpi { font-size:28px; font-weight:800; }
+  .report-page { max-width:1120px; margin:0 auto; }
+  .report-header h4 { font-size:34px; font-weight:800; color:#1f2937; letter-spacing:-0.02em; }
+  .report-header .range { font-size:15px; color:#6b7280; }
+  .report-card { border-radius:18px; border:1px solid #e6e6e6; box-shadow:0 16px 28px rgba(16,42,67,0.08); background:#f7f7f9; }
+  .report-kpi { font-size:28px; font-weight:800; letter-spacing:-0.02em; }
   .report-kpi.green { color:#15803d; }
   .report-kpi.red { color:#b91c1c; }
   .report-table th { font-size:12px; text-transform:uppercase; letter-spacing:0.04em; color:#64748b; }
-  .filter-card { background:#fff; border:1px solid #e5e7eb; border-radius:18px; padding:16px; box-shadow:0 10px 20px rgba(0,0,0,0.05); }
-  .filter-grid { display:grid; grid-template-columns:1fr auto 1fr auto; gap:16px; align-items:center; }
-  .filter-divider { width:1px; height:44px; background:#e5e7eb; }
-  .filter-group label { font-size:13px; color:#6b7280; margin-bottom:6px; }
-  .filter-input { display:flex; align-items:center; gap:8px; border:1px solid #e5e7eb; border-radius:12px; padding:8px 10px; background:#fff; }
+  .filter-card { background:#fff; border:1px solid #e5e7eb; border-radius:18px; padding:18px; box-shadow:0 12px 20px rgba(16,42,67,0.08); }
+  .filter-grid { display:grid; grid-template-columns:minmax(220px, 1fr) auto minmax(220px, 1fr) auto; gap:16px; align-items:center; }
+  .filter-divider { width:1px; height:40px; background:#e5e7eb; }
+  .filter-group label { font-size:12px; color:#6b7280; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.04em; }
+  .filter-input { display:flex; align-items:center; gap:8px; border:1px solid #e5e7eb; border-radius:12px; padding:8px 12px; background:#fff; }
   .filter-input input { border:0; outline:0; background:transparent; width:100%; }
-  .filter-btn { border-radius:10px; padding:8px 18px; }
-  .range-tabs { display:flex; gap:8px; background:#f1f5f9; padding:6px; border-radius:12px; }
-  .range-tab { padding:6px 14px; border-radius:10px; color:#334155; text-decoration:none; font-weight:600; }
+  .filter-btn { border-radius:12px; padding:10px 20px; font-weight:600; }
+  .range-tabs { display:flex; gap:10px; background:#f1f5f9; padding:6px; border-radius:12px; }
+  .range-tab { padding:6px 16px; border-radius:10px; color:#334155; text-decoration:none; font-weight:600; }
   .range-tab.active { background:#2563eb; color:#fff; }
   .section-title { font-weight:700; color:#1f2937; }
   .crm-section-link { font-size:13px; color:#1e3a8a; text-decoration:none; font-weight:600; }
@@ -63,7 +63,7 @@
         <div class="filter-group">
           <label>Boshlanish</label>
           <div class="filter-input">
-            <input type="date" name="start" value="{{ start_date|date:'Y-m-d' }}">
+            <input type="date" name="start" value="{{ start_date|date:'Y-m-d' }}" lang="uz">
             <i class="bi bi-calendar3 text-muted"></i>
           </div>
         </div>
@@ -71,7 +71,7 @@
         <div class="filter-group">
           <label>Tugash</label>
           <div class="filter-input">
-            <input type="date" name="end" value="{{ end_date|date:'Y-m-d' }}">
+            <input type="date" name="end" value="{{ end_date|date:'Y-m-d' }}" lang="uz">
             <i class="bi bi-calendar3 text-muted"></i>
           </div>
         </div>
@@ -124,7 +124,7 @@
           <input type="hidden" name="form_type" value="expense">
           <input class="form-control" type="text" name="title" placeholder="Sarlavha" required>
           <input class="form-control" type="number" name="amount" step="0.01" placeholder="Summa" required>
-          <input class="form-control" type="date" name="spent_on">
+          <input class="form-control" type="date" name="spent_on" value="{{ today|date:'Y-m-d' }}" lang="uz">
           <textarea class="form-control" name="note" rows="2" placeholder="Izoh (ixtiyoriy)"></textarea>
           <button class="btn btn-danger" type="submit">Chiqimni saqlash</button>
         </form>
@@ -176,6 +176,7 @@
           {% for debt in debts %}
           <div class="debt-card">
             <div class="debt-title">{{ debt.full_name }}</div>
+            <div class="debt-meta">{{ debt.created_at|date:"Y-m-d" }}</div>
             <div class="debt-meta">{{ debt.phone|default:"-" }}</div>
             <div class="debt-amount mt-2">{{ debt.amount|floatformat:0|intcomma }} so'm</div>
           </div>

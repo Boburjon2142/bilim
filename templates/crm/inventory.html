@@ -5,7 +5,7 @@
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
   <h4 class="mb-0">Ombor nazorati</h4>
-  <span class="crm-pill">Kitoblar: {{ books|length }}</span>
+  <span class="crm-pill">Kitoblar: {{ total_books }}</span>
 </div>
 
 <div class="card crm-card p-3 mb-4">
@@ -14,7 +14,7 @@
     <div class="col-md-5">
       <label class="form-label">Kitob</label>
       <select name="book_id" class="form-select">
-        {% for book in books %}
+        {% for book in all_books %}
         <option value="{{ book.id }}">{{ book.title }}</option>
         {% endfor %}
       </select>
@@ -34,6 +34,15 @@
 </div>
 
 <div class="card crm-card p-3">
+  <form method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-md-6">
+      <label class="form-label">Qidiruv</label>
+      <input type="text" name="q" class="form-control" placeholder="Kitob nomi yoki shtrix-kod" value="{{ query }}">
+    </div>
+    <div class="col-md-2">
+      <button class="btn btn-outline-primary w-100" type="submit">Qidirish</button>
+    </div>
+  </form>
   <table class="table crm-table align-middle">
     <thead>
       <tr>

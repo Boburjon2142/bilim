@@ -13,6 +13,16 @@ Alias /media /home/bilimsto/bookstore/media/
     Require all granted
 </Directory>
 
+# For PythonAnywhere test host, update paths if needed:
+# Alias /static /home/akramjonovich2/bookstore/staticfiles/
+# <Directory /home/akramjonovich2/bookstore/staticfiles/>
+#     Require all granted
+# </Directory>
+# Alias /media /home/akramjonovich2/bookstore/media/
+# <Directory /home/akramjonovich2/bookstore/media/>
+#     Require all granted
+# </Directory>
+
 # --- Browser caching (static/media) ---
 <IfModule mod_expires.c>
   ExpiresActive On
